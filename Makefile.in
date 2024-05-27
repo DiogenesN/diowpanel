@@ -1,0 +1,41 @@
+CC = gcc
+CFLAGS = -Wall -flto -Wextra -Wpedantic -march=native -funroll-loops -export-dynamic -fomit-frame-pointer
+LDFLAGS += $(shell pkg-config --libs alsa, xkbcommon, wayland-client, wayland-cursor, librsvg-2.0)
+CFLAGS += $(shell pkg-config --cflags alsa, xkbcommon, wayland-client, wayland-cursor, librsvg-2.0)
+CFLAGS += -Isrc/
+CFLAGS += -DWLR_USE_UNSTABLE
+SRCFILES = src/create-shm.c src/outputtochararray.c src/runcmd.c src/outputtochar.c src/replacenthline.c src/returnlinefromfile.c src/wlr-data-control-unstable-v1.client-protocol.c src/getvaluefromconf.c src/xdg-shell-client-protocol.c src/wlr-layer-shell-unstable-v1-client-protocol.c src/diowpanel.c
+OBJFILES = $(patsubst src/%.c, %.o, $(SRCFILES))
+TARGET = diowpanel
+PREFIX = /usr/local
+BINDIR = $(PREFIX)/bin
+
+all: $(TARGET)
+
+$(TARGET): $(OBJFILES)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	@echo "\nSuccessfully built $(TARGET)!\nType 'make run' to test or 'sudo make install' to install."
+
+%.o: src/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+.PHONY: run
+
+run: $(TARGET)
+	@echo
+	@echo "_________________________________________________________________________________________________________"
+	@echo
+	@echo "'"$(TARGET)"'" output is:
+	@echo "_________________________________________________________________________________________________________"
+	@echo
+	@./$(TARGET)
+
+install: $(TARGET)
+	install -d $(DESTDIR)$(BINDIR)
+	install -m 755 $(TARGET) $(DESTDIR)$(BINDIR)
+
+clean:
+	rm -f $(OBJFILES) $(TARGET)
+
+uninstall:
+	rm -f $(DESTDIR)$(BINDIR)/$(TARGET)

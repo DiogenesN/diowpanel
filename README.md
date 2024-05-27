@@ -3,7 +3,7 @@ A Wayland application that represents a little panel with widgets. If you like i
 Scrolling anywhere on the panel changes the volume level. Right click on the panel terminates the panel.
 It was tested on Debian 12 on Wayfire.
 
-# What you can do with DioWWindowList
+# What you can do with DioWPanel
    1. Adjust volume level.
    2. Adjust bightness level.
    3. Showing a digital clock and calendar with the current month..

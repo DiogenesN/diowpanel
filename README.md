@@ -34,7 +34,8 @@ It was tested on Debian 12 on Wayfire.
 
 # Installation/Usage
   1. Open a terminal and run:
-  2.		  chmod +x ./configure
+
+		 chmod +x ./configure
 		 ./configure
 
   3. if all went well then run:

@@ -34,17 +34,17 @@ It was tested on Debian 12 on Wayfire.
 
 # Installation/Usage
   1. Open a terminal and run:
-		 chmod +x ./configure
+  2.		  chmod +x ./configure
 		 ./configure
 
-  2. if all went well then run:
+  3. if all went well then run:
 
 		 make
 		 sudo make install
 		 
 		 (if you just want to test it then run: make run)
 		
-  3. Run the application:
+  4. Run the application:
   
 		 diowpanel
 

@@ -597,6 +597,11 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 				/// setting volume level on clicking inside
 				if (strcmp(selectedWidget, "volume") == 0) {
 					set_volume_level(volumeLevel);
+					/// refresh the frame and adjust the volume bar
+					struct wl_buffer *buffer_volume = draw_frame_volume_bright_popup(state);
+					wl_surface_attach(state->wl_surface_popup, buffer_volume, 0, 0);
+					wl_surface_damage_buffer(state->wl_surface_popup, 0, 0, INT32_MAX, INT32_MAX);
+					wl_surface_commit(state->wl_surface_popup);
 				}
 				/// setting brightness level on clicking inside
 				if (strcmp(selectedWidget, "brightness") == 0) {
@@ -607,18 +612,23 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 					}
 					set_brightness(volumeLevel, path);
 					free((void *)path);
+					/// refresh the frame and adjust the volume bar
+					struct wl_buffer *buffer_volume = draw_frame_volume_bright_popup(state);
+					wl_surface_attach(state->wl_surface_popup, buffer_volume, 0, 0);
+					wl_surface_damage_buffer(state->wl_surface_popup, 0, 0, INT32_MAX, INT32_MAX);
+					wl_surface_commit(state->wl_surface_popup);
 				}
-				/// refresh the frame and adjust the volume bar
-				struct wl_buffer *buffer_volume = draw_frame_volume_bright_popup(state);
-				wl_surface_attach(state->wl_surface_popup, buffer_volume, 0, 0);
-				wl_surface_damage_buffer(state->wl_surface_popup, 0, 0, INT32_MAX, INT32_MAX);
-				wl_surface_commit(state->wl_surface_popup);
 			}
 			/// plus volumr click
 			if (state->y_motion < 40) {
 				/// increasing volume level on clicking plus
 				if (strcmp(selectedWidget, "volume") == 0) {
 					change_volume_level("volume up");
+					/// refresh the frame and adjust the volume bar
+					struct wl_buffer *buffer_volume = draw_frame_volume_bright_popup(state);
+					wl_surface_attach(state->wl_surface_popup, buffer_volume, 0, 0);
+					wl_surface_damage_buffer(state->wl_surface_popup, 0, 0, INT32_MAX, INT32_MAX);
+					wl_surface_commit(state->wl_surface_popup);
 				}
 				/// increasing brightness level on clicking plus
 				if (strcmp(selectedWidget, "brightness") == 0) {
@@ -635,18 +645,23 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 					}
 					set_brightness((currentBrightness + 3), path);
 					free((void *)path);
+					/// refresh the frame and adjust the volume bar
+					struct wl_buffer *buffer_volume = draw_frame_volume_bright_popup(state);
+					wl_surface_attach(state->wl_surface_popup, buffer_volume, 0, 0);
+					wl_surface_damage_buffer(state->wl_surface_popup, 0, 0, INT32_MAX, INT32_MAX);
+					wl_surface_commit(state->wl_surface_popup);
 				}
-				/// refresh the frame and adjust the volume bar
-				struct wl_buffer *buffer_volume = draw_frame_volume_bright_popup(state);
-				wl_surface_attach(state->wl_surface_popup, buffer_volume, 0, 0);
-				wl_surface_damage_buffer(state->wl_surface_popup, 0, 0, INT32_MAX, INT32_MAX);
-				wl_surface_commit(state->wl_surface_popup);
 			}
 			/// minus volumr click
 			if (state->y_motion > 130) {
 				/// decreasing volume level
 				if (strcmp(selectedWidget, "volume") == 0) {
 					change_volume_level("volume down");
+					/// refresh the frame and adjust the volume bar
+					struct wl_buffer *buffer_volume = draw_frame_volume_bright_popup(state);
+					wl_surface_attach(state->wl_surface_popup, buffer_volume, 0, 0);
+					wl_surface_damage_buffer(state->wl_surface_popup, 0, 0, INT32_MAX, INT32_MAX);
+					wl_surface_commit(state->wl_surface_popup);
 				}
 				/// decreasing brightness level
 				if (strcmp(selectedWidget, "brightness") == 0) {
@@ -658,12 +673,12 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 					}
 					set_brightness((currentBrightness - 3), path);
 					free((void *)path);
+					/// refresh the frame and adjust the volume bar
+					struct wl_buffer *buffer_volume = draw_frame_volume_bright_popup(state);
+					wl_surface_attach(state->wl_surface_popup, buffer_volume, 0, 0);
+					wl_surface_damage_buffer(state->wl_surface_popup, 0, 0, INT32_MAX, INT32_MAX);
+					wl_surface_commit(state->wl_surface_popup);
 				}
-				/// refresh the frame and adjust the volume bar
-				struct wl_buffer *buffer_volume = draw_frame_volume_bright_popup(state);
-				wl_surface_attach(state->wl_surface_popup, buffer_volume, 0, 0);
-				wl_surface_damage_buffer(state->wl_surface_popup, 0, 0, INT32_MAX, INT32_MAX);
-				wl_surface_commit(state->wl_surface_popup);
 			}
 			/// clicking page down in notes
 			if (strcmp(selectedWidget, "notes") == 0) {
@@ -779,13 +794,20 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 						/// getting the command from config to check if saved
 						char *checkIfSavedCMD = get_char_value_from_conf(config, "check_if_saved");
 						char checkIfSavedCMDFull[strlen(checkIfSavedCMD) + \
-												strlen(network_ptr->ssids[selectedNetwork]) + 10];
-						snprintf(checkIfSavedCMDFull, sizeof(checkIfSavedCMDFull), "%s \"%s\"", \
+												strlen(network_ptr->ssids[selectedNetwork]) + 100];
+						snprintf(checkIfSavedCMDFull, sizeof(checkIfSavedCMDFull), \
+																		"%s \"%s\" || echo ''", \
 											checkIfSavedCMD, network_ptr->ssids[selectedNetwork]);
+						///fprintf(stderr, "checkIfSavedCMDFull: %s\n", checkIfSavedCMDFull);
 						const char *checkIfNetworkSaved = output_to_char(checkIfSavedCMDFull);
 						static bool isNetworkSaved = false;
 						/// check if the output of checking command returns selected network name
+						///fprintf(stderr, "checkIfNetworkSaved: %s\n", checkIfNetworkSaved);
+						///fprintf(stderr, "selectedNetwork: %s\n",
+						///									network_ptr->ssids[selectedNetwork]);
 						if (strcmp(checkIfNetworkSaved, network_ptr->ssids[selectedNetwork]) == 0) {
+							///fprintf(stderr, "set %s as saved\n",
+							///						network_ptr->ssids[selectedNetwork]);
 							isNetworkSaved = true;
 						}
 						else {
@@ -800,25 +822,19 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 							free(checkIfSavedCMD);
 							checkIfSavedCMD = NULL;
 						}
-
-						if ((strcmp(network_ptr->keys[selectedNetwork], "free") != 0) && \
-																			!isNetworkSaved) {
-							///printf("this network is secured, please enter the password\n");
-							ssidsTimer = false;
-							securedNetwork = true;
-							snprintf(passSSID, sizeof(passSSID), "\"%s\"",
-															network_ptr->ssids[selectedNetwork]);
-						}
-						else {
-							isNetworkSaved = false;
-							/* check if we click on currently active connection
-							 * in this case we will disconnect it, otherwise we connect to it
-							 */
+						// If currently clicked network is not free
+						if ((strcmp(network_ptr->keys[selectedNetwork], "free") != 0)) {
+							///fprintf(stderr, "Secured network: %s\n",
+							///								network_ptr->keys[selectedNetwork]);
+							// We know this network is secured but before proceeding
+							// we also need to find out if this network is currently active one
+							// if clicked network if the currently active one
+							// then we disconnect it.
 							if (strcmp(network_ptr->ssids[selectedNetwork],
 																	currActiveNetwork) == 0) {
-								/// disconnect this network
-								///printf("disconnecting:%s\n",network_ptr->ssids[selectedNetwork]);
 								/// gerring disconnect command
+								popupEntered = false;
+								isNetworkSaved = false;
 								char *disconnectCMD = get_char_value_from_conf(config,
 																			"disconnect_cmd");
 								char disconnectCMDFull[strlen(disconnectCMD) + \
@@ -826,15 +842,31 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 								snprintf(disconnectCMDFull, sizeof(disconnectCMDFull), "%s \"%s\"",
 									disconnectCMD, network_ptr->ssids[selectedNetwork]);
 								/// run disconnect command
+								/// disconnect this network
+								///fprintf(stderr, "disconnecting:%s\n",
+								///							network_ptr->ssids[selectedNetwork]);
+								///fprintf(stderr, "disconnect command: %s\n", disconnectCMDFull);
 								run_cmd(disconnectCMDFull);
-								free(disconnectCMD);
-								close_popup(state);
-								hotspotEnabled = false;
+								if (disconnectCMD) {
+									free(disconnectCMD);
+									disconnectCMD = NULL;
+								}
+								///close_popup(state);
+								return;
+								///hotspotEnabled = false;
 							}
-							else {
-								/// connect to this network without password prompt
-								///printf("this network is free or has been previously saved\n");
-								///printf("connecting: %s\n", network_ptr->ssids[selectedNetwork]);
+							
+							// Now we need to find out if this network has been previously saved
+							// if it has beeen previously saved then we don't need a password 
+							// prompt when connecting.
+							if (isNetworkSaved) {
+								// Setting securedNetwork = false disables password dialog
+								isNetworkSaved = false;
+								securedNetwork = false;
+								// Connect to this network without password prompt
+								///printf("this network has been previously saved\n");
+								///printf("connecting to: %s\n",
+								///						network_ptr->ssids[selectedNetwork]);
 								/// getting command to connect to selected network
 								char *connectCMD = get_char_value_from_conf(config,
 																			"cmd_connect");
@@ -844,9 +876,46 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 									connectCMD, network_ptr->ssids[selectedNetwork]);
 								/// run disconnect command
 								run_cmd(connectCMDFull);
-								free(connectCMD);
+								if (connectCMD) {
+									free(connectCMD);
+									connectCMD = NULL;
+								}
 								close_popup(state);
 							}
+							else {
+								///printf("this network is secured, please enter the password\n");
+								ssidsTimer = false;
+								securedNetwork = true;
+								snprintf(passSSID,
+										sizeof(passSSID),
+										"\"%s\"",
+										network_ptr->ssids[selectedNetwork]);
+								// Connect to this network with password prompt
+								struct wl_buffer *buffer = draw_frame_password(state);
+								wl_surface_attach(state->wl_surface_popup, buffer, 0, 0);
+								wl_surface_commit(state->wl_surface_popup);
+								///close_popup(state);
+							}
+						}
+						else { // If currently clicked network is free
+							///fprintf(stderr, "Currently clicked SSID is a free network\n");
+							// Connecti without password prompt
+							securedNetwork = false;
+							// Connect to this network without password prompt
+							///printf("connecting: %s\n", network_ptr->ssids[selectedNetwork]);
+							/// getting command to connect to selected network
+							char *connectCMD = get_char_value_from_conf(config, "cmd_connect");
+							char connectCMDFull[strlen(connectCMD) + \
+												strlen(network_ptr->ssids[selectedNetwork]) + 10];
+							snprintf(connectCMDFull, sizeof(connectCMDFull), "%s \"%s\"",
+												connectCMD, network_ptr->ssids[selectedNetwork]);
+							/// run disconnect command
+							run_cmd(connectCMDFull);
+							if (connectCMD != NULL) {
+								free(connectCMD);
+								connectCMD = NULL;
+							}
+							close_popup(state);
 						}
 					}
 					if (state->y_motion >= 650 && state->x_motion <= 70) {
@@ -871,7 +940,8 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 							///printf("Disabling Wifi\n");
 							wifiEnabled = false;
 							/// getting disable wifi command from config
-							char *wifiDisableCMD = get_char_value_from_conf(config, "disable_wifi");
+							char *wifiDisableCMD = get_char_value_from_conf(config,
+																			"disable_wifi");
 							run_cmd(wifiDisableCMD);
 							free(wifiDisableCMD);
 							if (strcmp(wifiState, "enabled") == 0) {
@@ -881,7 +951,8 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 						free((void *)wifiState);
 						free(wifiStateCMD);
 					}
-					if (state->y_motion >= 650 && state->x_motion >= 90 && state->x_motion <= 290) {
+					if (state->y_motion >= 650 && \
+							state->x_motion >= 90 && state->x_motion <= 290) {
 						/// toggle enable/disable
 						if (!hotspotEnabled) {
 							///printf("HotSpot Enabled\n");
@@ -980,7 +1051,8 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 						netDialogPageDown = true;
 						ssidsReady = true;
 					}
-					if (state->y_motion >= 640 && state->y_motion < 670 && state->x_motion >= 570) {
+					if (state->y_motion >= 640 && \
+							state->y_motion < 670 && state->x_motion >= 570) {
 						///printf("Network page up\n");
 						netItemsCounter = netItemsCounter - 9;
 						text_scroll_net = text_scroll_net - 9;
@@ -2305,15 +2377,17 @@ static void xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, u
     struct client_state *state = data;
     xdg_surface_ack_configure(xdg_surface, serial);
     /// choosing the proper panel widget popup
-    struct wl_buffer *buffer;
+    ///struct wl_buffer *buffer;
     if (strcmp(selectedWidget, "volume") == 0) {
-		buffer = draw_frame_volume_bright_popup(state);
+    	///fprintf(stderr, "CONFIGURE VOLUME\n");
+		struct wl_buffer *buffer = draw_frame_volume_bright_popup(state);
 		wl_surface_attach(state->wl_surface_popup, buffer, 0, 0);
 		wl_surface_commit(state->wl_surface_popup);
 		return;
 	}
     else if (strcmp(selectedWidget, "brightness") == 0) {
-		buffer = draw_frame_volume_bright_popup(state);
+    	///fprintf(stderr, "CONFIGURE BRIGHTNESS\n");
+		struct wl_buffer *buffer = draw_frame_volume_bright_popup(state);
 		wl_surface_attach(state->wl_surface_popup, buffer, 0, 0);
 		xdg_surface_set_window_geometry(state->xdg_surface, (state->x_popup + 80), state->y_popup,
 														state->width_popup, state->height_popup);
@@ -2321,7 +2395,8 @@ static void xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, u
 		return;
 	}
     else if (strcmp(selectedWidget, "datetime") == 0) {
-		buffer = draw_frame_datetime_popup(state);
+    	///fprintf(stderr, "CONFIGURE DATETIME\n");
+		struct wl_buffer *buffer = draw_frame_datetime_popup(state);
 		wl_surface_attach(state->wl_surface_popup, buffer, 0, 0);
 		xdg_surface_set_window_geometry(state->xdg_surface, (state->x_popup + 700),
 							(state->y_popup + 320), state->width_popup, state->height_popup);
@@ -2329,7 +2404,7 @@ static void xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, u
 		return;
 	}
     else if (strcmp(selectedWidget, "notes") == 0) {
-		buffer = draw_frame_notes(state);
+		struct wl_buffer *buffer = draw_frame_notes(state);
 		wl_surface_attach(state->wl_surface_popup, buffer, 0, 0);
 		xdg_surface_set_window_geometry(state->xdg_surface, (state->x_popup + 1150),
 							(state->y_popup + 720), state->width_popup, state->height_popup);
@@ -2361,6 +2436,15 @@ static void xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, u
 			ssidsTimer = false;
 		}
 
+		/// showing either available networks or password prompt
+		if (!securedNetwork) {
+			struct wl_buffer *buffer = draw_frame_network(state);
+			xdg_surface_set_window_geometry(state->xdg_surface, (state->x_popup + 1200),
+																	0, state->width_popup, 420);
+			wl_surface_attach(state->wl_surface_popup, buffer, 0, 0);
+			wl_surface_commit(state->wl_surface_popup);
+		}
+
 		free((void *)wifiState);
 		wifiState = NULL;
 		free(wifiStateCMD);
@@ -2371,20 +2455,6 @@ static void xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, u
 		connectionStateCMD = NULL;
 		free(getCurrConnectionCMD);
 		getCurrConnectionCMD = NULL;
-
-		/// showing either available networks or password prompt
-		if (securedNetwork) {
-			buffer = draw_frame_password(state);
-			xdg_surface_set_window_geometry(state->xdg_surface, (state->x_popup + 2400),
-								(state->y_popup + 930), state->width_popup, state->height_popup);
-		}
-		else {
-			buffer = draw_frame_network(state);
-			xdg_surface_set_window_geometry(state->xdg_surface, (state->x_popup + 1150),
-								(state->y_popup + 930), state->width_popup, state->height_popup);
-		}
-		wl_surface_attach(state->wl_surface_popup, buffer, 0, 0);
-		wl_surface_commit(state->wl_surface_popup);
 		return;
 	}
 }

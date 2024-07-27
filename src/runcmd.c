@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /* Runs the given command with arguments
  * also supports quoted arguments but you need to build the command with \"%s\"
  * You need to provide the full path to the executable
@@ -10,9 +12,11 @@
 #include <spawn.h>
 #include <errno.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <sys/wait.h>
 
 #define MAX_ARGS 300
 
@@ -21,18 +25,22 @@ char addPath[2048];
 extern char **environ;
 static int currChar = 0;
 static bool isUsrBin = true;
+static bool firstArgPassed = false; // used to add path only to the first argument
 
 char *process_arguments(char **command_p) {
-	// Trying to guess the path if not provided
-	if (isUsrBin && iterCount == 0 && command_p[0][0] != '/') { // path to 
-		snprintf(addPath, sizeof(addPath), "/usr/local/bin/%s", *command_p);
-		*command_p = addPath;
-		iterCount = iterCount + 1;
-	}
-	else if (!isUsrBin && iterCount == 1 && command_p[0][0] != '/') {
-		snprintf(addPath, sizeof(addPath), "/usr/bin/%s", *command_p);
-		*command_p = addPath;
-		iterCount = 2;
+	// Check if the command was passed without path
+	if (command_p[0][0] != '/' && !firstArgPassed) {
+		// Trying to guess the path if not provided
+		if (isUsrBin && iterCount == 0) { // path to
+			snprintf(addPath, sizeof(addPath), "/usr/local/bin/%s", *command_p);
+			*command_p = addPath;
+			iterCount = iterCount + 1;
+		}
+		else if (!isUsrBin && iterCount == 1) {
+			snprintf(addPath, sizeof(addPath), "/usr/bin/%s", *command_p);
+			*command_p = addPath;
+			iterCount = 2;
+		}
 	}
 
 	char *text_p = *command_p;
@@ -69,7 +77,7 @@ char *process_arguments(char **command_p) {
 	return strdup(tmp); // Return a new copy of the string
 }
 
-void run_cmd(char *command) {
+static void run_main_cmd(char *command) {
 	pid_t pid;
 	int argc = 0;
 	char *argv[MAX_ARGS];
@@ -77,7 +85,9 @@ void run_cmd(char *command) {
 
 	/// Tokenize command and populate argv
 	while (*command_p != '\0' && argc < MAX_ARGS) {
+		// sends one argument at a time and returns properly formatted string to populate array
 		char *string = process_arguments(&command_p);
+		firstArgPassed = true;
 		argv[argc] = string;
 		argc = argc + 1;
 	}
@@ -90,7 +100,8 @@ void run_cmd(char *command) {
 
 	if (status != 0 && iterCount < 2) {
 		isUsrBin = false;
-		run_cmd((char *)command);
+		firstArgPassed = false;
+		run_main_cmd((char *)command);
 	}
 	else if (status != 0 && iterCount == 2) {
 		fprintf(stderr, "Error: %s. Please provide full path to %s\n", strerror(status), argv[0]);
@@ -100,5 +111,23 @@ void run_cmd(char *command) {
 	for (int i = 0; argv[i] != NULL; i++) {
 		///printf("argv[%d]: %s\n", i, argv[i]);
 		free(argv[i]); // Free each string
+	}
+}
+
+void run_cmd(char *command) {
+	pid_t pid = fork();
+	if (pid == 0) {
+		// In child process
+		run_main_cmd(command);
+		exit(0); // Ensure the child process exits after running the command
+	}
+	else if (pid > 0) {
+		// In parent process
+		int status;
+		waitpid(pid, &status, 0); // Wait for the child process to finish
+	}
+	else {
+		// fork failed
+		perror("fork");
 	}
 }

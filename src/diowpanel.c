@@ -690,6 +690,7 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 					text_scroll = text_scroll + 15;
 					struct wl_buffer *buffer_notes = draw_frame_notes(state);
 					wl_surface_attach(state->wl_surface_popup, buffer_notes, 0, 0);
+					wl_surface_damage_buffer(state->wl_surface_popup, 0, 0, INT32_MAX, INT32_MAX);
 					wl_surface_commit(state->wl_surface_popup);
 					///return;
 				}
@@ -701,6 +702,7 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 					currentSelectedLine = currentSelectedLine - 15;
 					struct wl_buffer *buffer_notes = draw_frame_notes(state);
 					wl_surface_attach(state->wl_surface_popup, buffer_notes, 0, 0);
+					wl_surface_damage_buffer(state->wl_surface_popup, 0, 0, INT32_MAX, INT32_MAX);
 					wl_surface_commit(state->wl_surface_popup);
 					///return;
 				}
@@ -746,6 +748,10 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 					else {
 						removeLineClicked = true;
 					}
+					struct wl_buffer *buffer_notes = draw_frame_notes(state);
+					wl_surface_attach(state->wl_surface_popup, buffer_notes, 0, 0);
+					wl_surface_damage_buffer(state->wl_surface_popup, 0, 0, INT32_MAX, INT32_MAX);
+					wl_surface_commit(state->wl_surface_popup);
 				}
 				else {
 					/// get the current selected line
@@ -760,12 +766,11 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 					if (removeLineClicked) {
 						/// remove selected line
 						replacenthline(notesTXTPath, currentSelectedLine + 1, "");
-						struct wl_buffer *buffer_notes = draw_frame_notes(state);
-						wl_surface_attach(state->wl_surface_popup, buffer_notes, 0, 0);
-						wl_surface_damage_buffer(state->wl_surface_popup, 0, 0, INT32_MAX,
-																					INT32_MAX);
-						wl_surface_commit(state->wl_surface_popup);
 					}
+					struct wl_buffer *buffer_notes = draw_frame_notes(state);
+					wl_surface_attach(state->wl_surface_popup, buffer_notes, 0, 0);
+					wl_surface_damage_buffer(state->wl_surface_popup, 0, 0, INT32_MAX, INT32_MAX);
+					wl_surface_commit(state->wl_surface_popup);
 				}
 			}
 			/// clicking on network icon
@@ -833,7 +838,6 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 							if (strcmp(network_ptr->ssids[selectedNetwork],
 																	currActiveNetwork) == 0) {
 								/// gerring disconnect command
-								popupEntered = false;
 								isNetworkSaved = false;
 								char *disconnectCMD = get_char_value_from_conf(config,
 																			"disconnect_cmd");
@@ -852,6 +856,11 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 									disconnectCMD = NULL;
 								}
 								///close_popup(state);
+								wl_surface_attach(state_ptr->wl_surface_popup, NULL, 0, 0);
+								wl_surface_commit(state_ptr->wl_surface_popup);
+								ssidsTimer = false;
+								popupEntered = false;
+								///panelClicked = false;
 								return;
 								///hotspotEnabled = false;
 							}
@@ -880,7 +889,12 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 									free(connectCMD);
 									connectCMD = NULL;
 								}
-								close_popup(state);
+								///close_popup(state);
+								wl_surface_attach(state_ptr->wl_surface_popup, NULL, 0, 0);
+								wl_surface_commit(state_ptr->wl_surface_popup);
+								ssidsTimer = false;
+								popupEntered = false;
+								return;
 							}
 							else {
 								///printf("this network is secured, please enter the password\n");
@@ -893,6 +907,8 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 								// Connect to this network with password prompt
 								struct wl_buffer *buffer = draw_frame_password(state);
 								wl_surface_attach(state->wl_surface_popup, buffer, 0, 0);
+								wl_surface_damage_buffer(state->wl_surface_popup, 0, 0,
+																	INT32_MAX, INT32_MAX);
 								wl_surface_commit(state->wl_surface_popup);
 								///close_popup(state);
 							}
@@ -950,10 +966,15 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 						}
 						free((void *)wifiState);
 						free(wifiStateCMD);
+						struct wl_buffer *buffer_network = draw_frame_network(state_ptr);
+						wl_surface_attach(state_ptr->wl_surface_popup, buffer_network, 0, 0);
+						wl_surface_damage_buffer(state_ptr->wl_surface_popup, 0, 0, INT32_MAX,
+																					INT32_MAX);
+						wl_surface_commit(state_ptr->wl_surface_popup);
 					}
 					if (state->y_motion >= 650 && \
 							state->x_motion >= 90 && state->x_motion <= 290) {
-						/// toggle enable/disable
+						/// toggle enable/disable hotspot
 						if (!hotspotEnabled) {
 							///printf("HotSpot Enabled\n");
 							hotspotEnabled = true;
@@ -1031,6 +1052,11 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 							run_cmd(disconnectCMDFull);
 							free(disconnectCMD);
 						}
+						struct wl_buffer *buffer_network = draw_frame_network(state_ptr);
+						wl_surface_attach(state_ptr->wl_surface_popup, buffer_network, 0, 0);
+						wl_surface_damage_buffer(state_ptr->wl_surface_popup, 0, 0, INT32_MAX,
+																					INT32_MAX);
+						wl_surface_commit(state_ptr->wl_surface_popup);
 					}
 					if (state->y_motion >= 650 && state->x_motion >= 300 && \
 																		state->x_motion <= 500){
@@ -1059,6 +1085,11 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 						netDialogPageDown = true;
 						ssidsReady = true;
 					}
+					struct wl_buffer *buffer_network = draw_frame_network(state_ptr);
+					wl_surface_attach(state_ptr->wl_surface_popup, buffer_network, 0, 0);
+					wl_surface_damage_buffer(state_ptr->wl_surface_popup, 0, 0, INT32_MAX,
+																				INT32_MAX);
+					wl_surface_commit(state_ptr->wl_surface_popup);
 				}
 				else {
 					/// inside password dialog clicking
@@ -1465,33 +1496,74 @@ static struct wl_buffer *draw_frame_volume_bright_popup(struct client_state *sta
 /************************************************************************************************/
 /* Timer to populate and display the available networks SSIDs and security status */
 static void show_networks() {
+	// If network manager is already open, close it and return.
 	if (nmanagerOpen) {
 		nmanagerOpen = false;
 		return;
 	}
+
+	// Ensure network_ptr is not NULL to avoid dereferencing a NULL pointer.
+	if (network_ptr == NULL) {
+		fprintf(stderr, "Error: network_ptr is NULL.\n");
+		return;
+	}
+
+	// Initialize SSIDs array to NULL to avoid undefined behavior.
 	network_ptr->ssids[0] = NULL;
-	/// gettinng command for network scan
+
+	// Get network scan commands.
 	char *networkScanCMD = get_char_value_from_conf(config, "network_scan");
-	/// gettinng command for network scan keys (password protected or free)
 	char *networkScanKeyCMD = get_char_value_from_conf(config, "network_key_scan");
+
+	// Check if the commands were retrieved successfully.
+	if (networkScanCMD == NULL || networkScanKeyCMD == NULL) {
+		fprintf(stderr, "Error: Failed to retrieve network scan commands.\n");
+		free(networkScanCMD);
+		free(networkScanKeyCMD);
+		return;
+	}
+
+	// Populate the SSIDs and keys arrays.
 	output_to_char_array(network_ptr->ssids, networkScanCMD);
 	output_to_char_array(network_ptr->keys, networkScanKeyCMD);
-	/// wait a bit for networks to finnish scanning
+
+	// Retry scanning if no SSIDs were found, panel was clicked, and it's not a secured network.
 	if (network_ptr->ssids[0] == NULL && panelClicked && !securedNetwork) {
 		output_to_char_array(network_ptr->ssids, networkScanCMD);
 		output_to_char_array(network_ptr->keys, networkScanKeyCMD);
 	}
-	/// refresh the frame buffer after SSIDs were populated
+
+	// Refresh the frame buffer if SSIDs are ready, panel was clicked, and it's not a secured
+	// network.
 	if (network_ptr->ssids[0] != NULL && panelClicked && !securedNetwork) {
 		ssidsReady = true;
+
+		// Ensure state_ptr is not NULL.
+		if (state_ptr == NULL) {
+			fprintf(stderr, "Error: state_ptr is NULL.\n");
+			free(networkScanCMD);
+			free(networkScanKeyCMD);
+			return;
+		}
+
 		struct wl_buffer *buffer_network = draw_frame_network(state_ptr);
+		if (buffer_network == NULL) {
+			fprintf(stderr, "Error: Failed to draw network frame.\n");
+			free(networkScanCMD);
+			free(networkScanKeyCMD);
+			return;
+		}
+
 		wl_surface_attach(state_ptr->wl_surface_popup, buffer_network, 0, 0);
 		wl_surface_damage_buffer(state_ptr->wl_surface_popup, 0, 0, INT32_MAX, INT32_MAX);
 		wl_surface_commit(state_ptr->wl_surface_popup);
 	}
+
+	// Free allocated memory for the scan commands.
 	free(networkScanCMD);
 	free(networkScanKeyCMD);
 }
+
 
 static struct wl_buffer *draw_frame_password(struct client_state *state) {
 	int width = 700;
@@ -1890,8 +1962,6 @@ static struct wl_buffer *draw_frame_datetime_popup(struct client_state *state) {
 	// Calculate cell width and height for the calendar grid
 	int cell_width = width / 7; // Assuming a week starts on Sunday
 	int cell_height = height / 7;
-	int emptyWidth = 0; /// for drawing empty squares
-	int emptyHeight = 0; /// for drawing empty squares
 
 	/// Calculate the day of the week for the first day of the month
 	struct tm first_day_tm = *timeinfo;
@@ -1940,32 +2010,29 @@ static struct wl_buffer *draw_frame_datetime_popup(struct client_state *state) {
 
 				first_day_tm.tm_mday++; // Move to the next day for the next iteration
 				mktime(&first_day_tm); // Update the time structure
-				/// drawing empty squares
-				if (row == 0) {
-					cairo_rectangle(cr, emptyWidth, emptyHeight, cell_width, cell_height);
-					cairo_stroke(cr); // Stroke the rectangle
-					emptyWidth = emptyWidth + width / 7;
-				}
-				if (row == 4) {
-					emptyHeight = height - (height / 4.7 * 2);
-					cairo_rectangle(cr, emptyWidth, emptyHeight, cell_width, cell_height);
-					cairo_stroke(cr); // Stroke the rectangle
-					emptyWidth = emptyWidth + width / 7;
-				}
-				if (row > 4) {
-					emptyHeight = height - (height / 3.5);
-					cairo_rectangle(cr, emptyWidth, emptyHeight, cell_width, cell_height);
-					cairo_stroke(cr); // Stroke the rectangle
-					emptyWidth = emptyWidth + width / 7;
-				}
 			}
 		}
 	}
-	char dateBuffer[80];
+
+	char dateBuffer[128];
 	strftime(dateBuffer, sizeof(dateBuffer), "%A, %d %B %Y", timeinfo);
-	cairo_move_to(cr, 63, 310);
-	cairo_set_font_size(cr, 20);
-	cairo_show_text(cr, dateBuffer); // Display day,month,year underneath
+
+	// Get the width of the widget and font size
+	int widget_width = 330;
+	double font_size = 20.0;
+
+	// Set font size and calculate text extents
+	cairo_set_font_size(cr, font_size);
+	cairo_text_extents_t extents;
+	cairo_text_extents(cr, dateBuffer, &extents);
+
+	// Calculate x position to center the text in the widget
+	double text_width = extents.width;
+	double x_position = (widget_width - text_width) / 2.0;
+
+	// Move to the calculated x position and show the text
+	cairo_move_to(cr, x_position, 310);  // y-coordinate remains unchanged
+	cairo_show_text(cr, dateBuffer);     // Display centered text
 
 	/// draw frame around
 	cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
@@ -2441,6 +2508,7 @@ static void xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, u
 			struct wl_buffer *buffer = draw_frame_network(state);
 			xdg_surface_set_window_geometry(state->xdg_surface, (state->x_popup + 1200),
 																	0, state->width_popup, 420);
+			wl_surface_damage_buffer(state_ptr->wl_surface_popup, 0, 0, INT32_MAX, INT32_MAX);
 			wl_surface_attach(state->wl_surface_popup, buffer, 0, 0);
 			wl_surface_commit(state->wl_surface_popup);
 		}

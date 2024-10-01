@@ -836,8 +836,9 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 							// if clicked network if the currently active one
 							// then we disconnect it.
 							if (strcmp(network_ptr->ssids[selectedNetwork],
-																	currActiveNetwork) == 0) {
-								/// gerring disconnect command
+																	currActiveNetwork) == 0 && \
+																	!isNetworkSaved) {
+								/// getting disconnect command
 								isNetworkSaved = false;
 								char *disconnectCMD = get_char_value_from_conf(config,
 																			"disconnect_cmd");
@@ -869,6 +870,7 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 							// if it has beeen previously saved then we don't need a password 
 							// prompt when connecting.
 							if (isNetworkSaved) {
+								fprintf(stderr, "one\n");
 								// Setting securedNetwork = false disables password dialog
 								isNetworkSaved = false;
 								securedNetwork = false;
@@ -911,6 +913,7 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 																	INT32_MAX, INT32_MAX);
 								wl_surface_commit(state->wl_surface_popup);
 								///close_popup(state);
+								return;
 							}
 						}
 						else { // If currently clicked network is free
@@ -1063,11 +1066,13 @@ static void wl_pointer_frame(void *data, struct wl_pointer *wl_pointer) {
 						///printf("opening network manager\n");
 						nmanagerOpen = true;
 						char *networkManCMD = get_char_value_from_conf(config, "nm_manager");
-						run_cmd(networkManCMD);
-						close_popup(state);
 						if (networkManCMD != NULL) {
+							run_cmd(networkManCMD);
 							free(networkManCMD);
 							networkManCMD = NULL;
+								ssidsTimer = false;
+								popupEntered = false;
+								nmanagerOpen = false;
 						}
 					}
 					if (state->y_motion >= 670 && state->x_motion >= 570) {

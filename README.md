@@ -49,6 +49,9 @@ It was tested on Debian 12 on Wayfire.
   
 		 diowpanel
 
+# BUGS
+There is a bug when connecting to a Wi-Fi for the first time, if you entered the wrong password then it will not prompt you with an error message. If you entered the password but it doesn't connect then it's most likely you entered the wrong password and in order to try again you need to remove your network SSID from the list of saved networks, the easiest way to do it is to launch nm-connection-editor and remove your network name from the Wi-Fi section and then try again.
+
 # Configuration
 The application creates the following configuration file
 

@@ -5,7 +5,7 @@ It was tested on Debian 12 on Wayfire.
 
 # What you can do with DioWPanel
    1. Adjust volume level.
-   2. Adjust bightness level.
+   2. Adjust brightness level.
    3. Showing a digital clock and calendar with the current month..
    4. Showing the current keyboard layout (at the moment there is no option to change layouts).
    5. Quick notes widget.

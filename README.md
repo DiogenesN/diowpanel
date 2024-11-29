@@ -17,7 +17,7 @@ It was tested on Debian 12 on Wayfire.
 		grep
 		make
 		pkgconf
-		awk (gawk)
+		gawk (awk)
 	 	librsvg2-dev
 		libcairo2-dev
 		libwayland-dev
@@ -28,7 +28,7 @@ It was tested on Debian 12 on Wayfire.
 
    on Debian run the following command:
 
-		sudo apt install sed grep make pkgconf awk librsvg2-dev libcairo2-dev libwayland-dev libasound2-dev network-manager libxkbcommon-dev libc6-dev
+		sudo apt install sed grep make pkgconf gawk librsvg2-dev libcairo2-dev libwayland-dev libasound2-dev network-manager libxkbcommon-dev libc6-dev
 
    after going through all the above steps, go to the next step in this tutorial.
 
